@@ -372,7 +372,8 @@ def execute(server, dynprompt, caches, current_item, extra_data, executed, promp
                 "output": output_ui
             })
             if server.client_id is not None:
-                print(datetime.datetime.now(), "send executed", prompt_id, unique_id, display_node_id)
+                print(datetime.datetime.now(), "--> send executed", prompt_id, unique_id, display_node_id)
+                logging.debug(f"execution.py calling send_sync for node {unique_id}")
                 server.send_sync("executed", { "node": unique_id, "display_node": display_node_id, "output": output_ui, "prompt_id": prompt_id }, server.client_id)
         if has_subgraph:
             cached_outputs = []

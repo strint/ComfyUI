@@ -766,7 +766,8 @@ class PromptServer():
 
     async def send(self, event, data, sid=None):
         if event == "executed":
-            print(datetime.datetime.now(), "server send ", event, data, sid)
+            print(datetime.datetime.now(), "==> server send ", event, data, sid)
+        logging.debug(f"send called: event={event}, sid={sid}")
         if event == BinaryEventTypes.UNENCODED_PREVIEW_IMAGE:
             await self.send_image(data, sid=sid)
         elif isinstance(data, (bytes, bytearray)):
@@ -829,7 +830,8 @@ class PromptServer():
 
     def send_sync(self, event, data, sid=None):
         if event == "executed":
-            print(datetime.datetime.now(), "send_sync", event, data, sid)
+            print(datetime.datetime.now(), "--> send_sync", event, data, sid)
+        logging.debug(f"send_sync called: event={event}, queue_size={self.messages.qsize()}")
         self.loop.call_soon_threadsafe(
             self.messages.put_nowait, (event, data, sid))
 
@@ -837,10 +839,13 @@ class PromptServer():
         self.send_sync("status", { "status": self.get_queue_info() })
 
     async def publish_loop(self):
+        logging.debug("publish_loop started")
         while True:
+            logging.debug(f"publish_loop waiting for message, queue_size={self.messages.qsize()}")
             msg = await self.messages.get()
             if msg[0] == "executed":
-                print(datetime.datetime.now(), "publish_loop send ", msg)
+                print(datetime.datetime.now(), "==> publish_loop send ", msg)
+            logging.debug(f"publish_loop processing message: {msg[0]}, remaining_queue_size={self.messages.qsize()}")
             await self.send(*msg)
 
     async def start(self, address, port, verbose=True, call_on_start=None):

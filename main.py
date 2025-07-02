@@ -12,6 +12,7 @@ import itertools
 import utils.extra_config
 import logging
 import sys
+import asyncio
 
 if __name__ == "__main__":
     #NOTE: These do not do anything on core ComfyUI, they are for custom nodes.
@@ -100,7 +101,6 @@ execute_prestartup_script()
 
 
 # Main code
-import asyncio
 import shutil
 import threading
 import gc
@@ -275,6 +275,11 @@ def start_comfyui(asyncio_loop=None):
     if not asyncio_loop:
         asyncio_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(asyncio_loop)
+    
+    # 确保事件循环的 debug 模式被启用
+    asyncio_loop.set_debug(True)
+    logging.info(f"Event loop debug enabled: {asyncio_loop.get_debug()}")
+    
     prompt_server = server.PromptServer(asyncio_loop)
 
     hook_breaker_ac10a0.save_functions()
