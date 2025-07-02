@@ -3,7 +3,8 @@ import sys
 import asyncio
 import traceback
 import datetime
-
+import gc
+import time
 import nodes
 import folder_paths
 import execution
@@ -836,12 +837,20 @@ class PromptServer():
         self.send_sync("status", { "status": self.get_queue_info() })
 
     async def publish_loop(self):
-        print("publish_loop started")
         while True:
             msg = await self.messages.get()
             if msg[0] == "executed" or msg[0] == "execution_success":
                 print(datetime.datetime.now(), "==> publish_loop send ", msg)
+
             await self.send(*msg)
+
+            # lazy gc at execution end
+            if msg[0] == "executing":
+                data = msg[1]
+                if data["node"] is None and os.environ.get("LAZY_GC", "0") == "1":
+                    gc_start_time = time.perf_counter()
+                    gc.collect()
+                    print(datetime.datetime.now(), f"publish_loop lazy gc completed in {time.perf_counter() - gc_start_time:.3f} seconds")
 
     async def start(self, address, port, verbose=True, call_on_start=None):
         await self.start_multi_address([(address, port)], call_on_start=call_on_start)

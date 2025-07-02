@@ -215,14 +215,10 @@ def prompt_worker(q, server_instance):
         if need_gc:
             current_time = time.perf_counter()
             if (current_time - last_gc_collect) > gc_collect_interval:
-                gc_start_time = time.perf_counter()
-                if os.environ.get("GC_WITH_THREAD") == "1":
-                    ...
-                    # gc_future = _gc_executor.submit(gc.collect)
-                    # gc_future.result()
-                else:
+                if os.environ.get("LAZY_GC", "0") != "1":
+                    gc_start_time = time.perf_counter()
                     gc.collect()
-                print(f"{datetime.datetime.now()} Garbage collection completed in {time.perf_counter() - gc_start_time:.3f} seconds")
+                    print(f"{datetime.datetime.now()} Garbage collection completed in {time.perf_counter() - gc_start_time:.3f} seconds")
                     
                 comfy.model_management.soft_empty_cache()
                 last_gc_collect = current_time
