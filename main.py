@@ -288,7 +288,7 @@ def start_comfyui(asyncio_loop=None):
         asyncio_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(asyncio_loop)
     
-    # 确保事件循环的 debug 模式被启用
+    # Enable event loop debug mode
     asyncio_loop.set_debug(True)
     logging.info(f"Event loop debug enabled: {asyncio_loop.get_debug()}")
     
