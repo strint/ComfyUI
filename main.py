@@ -1,7 +1,6 @@
 import comfy.options
 comfy.options.enable_args_parsing()
 
-import concurrent.futures
 import os
 import importlib.util
 import folder_paths
@@ -15,8 +14,6 @@ import logging
 import sys
 import asyncio
 
-
-_gc_executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
 
 if __name__ == "__main__":
     #NOTE: These do not do anything on core ComfyUI, they are for custom nodes.
