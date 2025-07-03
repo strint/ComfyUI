@@ -5,12 +5,15 @@ import os
 import importlib.util
 import folder_paths
 import time
+import datetime
 from comfy.cli_args import args
 from app.logger import setup_logger
 import itertools
 import utils.extra_config
 import logging
 import sys
+import asyncio
+
 
 if __name__ == "__main__":
     #NOTE: These do not do anything on core ComfyUI, they are for custom nodes.
@@ -102,7 +105,6 @@ execute_prestartup_script()
 
 
 # Main code
-import asyncio
 import shutil
 import threading
 import gc
@@ -188,6 +190,7 @@ def prompt_worker(q, server_instance):
 
             current_time = time.perf_counter()
             execution_time = current_time - execution_start_time
+            print(datetime.datetime.now(), "execution_time", execution_time)
 
             # Log Time in a more readable way after 10 minutes
             if execution_time > 600:
@@ -212,7 +215,11 @@ def prompt_worker(q, server_instance):
         if need_gc:
             current_time = time.perf_counter()
             if (current_time - last_gc_collect) > gc_collect_interval:
-                gc.collect()
+                if os.environ.get("LAZY_GC", "0") != "1":
+                    gc_start_time = time.perf_counter()
+                    gc.collect()
+                    print(f"{datetime.datetime.now()} Garbage collection completed in {time.perf_counter() - gc_start_time:.3f} seconds")
+                    
                 comfy.model_management.soft_empty_cache()
                 last_gc_collect = current_time
                 need_gc = False
@@ -276,6 +283,11 @@ def start_comfyui(asyncio_loop=None):
     if not asyncio_loop:
         asyncio_loop = asyncio.new_event_loop()
         asyncio.set_event_loop(asyncio_loop)
+    
+    # Enable event loop debug mode
+    asyncio_loop.set_debug(True)
+    logging.info(f"Event loop debug enabled: {asyncio_loop.get_debug()}")
+    
     prompt_server = server.PromptServer(asyncio_loop)
 
     hook_breaker_ac10a0.save_functions()
